@@ -68,6 +68,22 @@ async function run() {
             res.send(result);
         })
 
+        // PUT operation to edit the DB
+        app.patch('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedBooking = req.body;
+            // console.log(updatedBooking);
+            const updateDoc = {
+                $set: {
+                    status: updatedBooking.status
+                },
+            };
+            // console.log(updateDoc);
+            const result = await bookingsCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
         // DELETE a specific booking by id
         app.delete('/bookings/:id', async (req, res) => {
             const id = req.params.id;
