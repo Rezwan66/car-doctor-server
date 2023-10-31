@@ -14,28 +14,28 @@ app.use(cookieParser());
 //     credentials: true,
 // }));
 app.use(cors({
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173', 'https://car-doctor-3554b.web.app', 'https://car-doctor-3554b.firebaseapp.com'],
     credentials: true,
 }))
 app.use(express.json());
 
 // MY MIDDLEWARE
 const logger = async (req, res, next) => {
-    console.log('called:', req.host, req.originalUrl);
+    console.log('called:', req.method, req.url);
     next();
 }
 
 const verifyToken = async (req, res, next) => {
-    const token = req.cookies?.token;
+    const token = req?.cookies?.token;
     console.log('value of token in middleware', token);
     if (!token) {
-        return res.status(401).send({ message: 'Unauthorized!' })
+        return res.status(401).send({ message: 'unauthorized access!' })
     }
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         // error
         if (err) {
             console.log(err);
-            return res.status(401).send({ message: 'forbidden!' })
+            return res.status(401).send({ message: 'unauthorized access!' })
         }
         // if token is valid then it would be decoded
         console.log('decoded value in the token: ', decoded);
@@ -85,9 +85,16 @@ async function run() {
             res
                 .cookie('token', token, {
                     httpOnly: true,
-                    secure: false, // http://localhost:5173/login
+                    secure: true,
+                    sameSite: 'none'
                 })
                 .send({ success: true });
+        })
+
+        app.post('/logout', async (req, res) => {
+            const user = req.body;
+            console.log('logging out user:', user);
+            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
         })
 
         // SERVICES related api
